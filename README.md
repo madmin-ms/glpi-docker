@@ -1,6 +1,11 @@
 # glpi-docker
 
-Dockerizált [GLPI 10.0.16](https://glpi-project.org/) IT eszközkezelő rendszer, Ubuntu 24.04 alapon, Apache2 + PHP 8.3 stackkel.
+Dockerizált [GLPI](https://glpi-project.org/) IT eszközkezelő rendszer, Ubuntu 24.04 alapon, Apache2 + PHP 8.3 stackkel.
+
+| Verzió | Könyvtár | Port |
+|--------|----------|------|
+| GLPI 10.0.16 | `glpi10-php8/` | 80 |
+| GLPI 11 (legújabb stable) | `glpi11-php8/` | 8080 |
 
 ## Követelmények
 
@@ -9,11 +14,23 @@ Dockerizált [GLPI 10.0.16](https://glpi-project.org/) IT eszközkezelő rendsze
 
 ## Gyors indítás
 
+Mindkét verzió egyszerre:
+
 ```bash
 docker compose up -d
 ```
 
-A GLPI felület elérhető: [http://localhost](http://localhost)
+Csak egy verzió:
+
+```bash
+docker compose up -d glpi10 mariadb-glpi10
+docker compose up -d glpi11 mariadb-glpi11
+```
+
+| Felület | URL |
+|---------|-----|
+| GLPI 10 | [http://localhost](http://localhost) |
+| GLPI 11 | [http://localhost:8080](http://localhost:8080) |
 
 Alapértelmezett bejelentkezési adatok: `glpi` / `glpi`
 
@@ -21,7 +38,7 @@ Alapértelmezett bejelentkezési adatok: `glpi` / `glpi`
 
 | Változó | Alapértelmezett | Leírás |
 |---------|-----------------|--------|
-| `MARIADB_HOST` | `mariadb-glpi` | MariaDB szerver hostname |
+| `MARIADB_HOST` | `mariadb-glpi10` / `mariadb-glpi11` | MariaDB szerver hostname |
 | `MARIADB_PORT` | `3306` | MariaDB port |
 | `MARIADB_DATABASE` | `glpi` | Adatbázis neve |
 | `MARIADB_USER` | `glpi-user` | Adatbázis felhasználó |
@@ -39,23 +56,33 @@ Alapértelmezett bejelentkezési adatok: `glpi` / `glpi`
 | [OCS Inventory NG](https://github.com/pluginsGLPI/ocsinventoryng) | 1.7.1 |
 | [GLPI Modifications](https://github.com/stdonato/glpi-modifications) | 2.0.2 |
 
+> **Megjegyzés:** A plugin verziók GLPI 10-hez teszteltek. GLPI 11 esetén ellenőrizd a kompatibilitást a `glpi11-php8/assets/scripts/glpi-plugins.sh` fájlban.
+
 ## Kötethasználat
 
 | Kötet | Tartalom |
 |-------|----------|
-| `glpi-data` | GLPI fájlrendszer (`/var/www/html`) |
-| `mariadb-data` | MariaDB adatok (`/var/lib/mysql`) |
+| `glpi10-data` | GLPI 10 fájlrendszer |
+| `mariadb10-data` | GLPI 10 MariaDB adatok |
+| `glpi11-data` | GLPI 11 fájlrendszer |
+| `mariadb11-data` | GLPI 11 MariaDB adatok |
 
 ## Plugin telepítés
 
-A pluginek manuálisan telepíthetők a konténer belsejéből:
-
 ```bash
-docker exec -it glpi bash /opt/glpi-plugins.sh
+# GLPI 10
+docker exec -it glpi10 bash /opt/glpi-plugins.sh
+
+# GLPI 11
+docker exec -it glpi11 bash /opt/glpi-plugins.sh
 ```
 
 ## Adatbázis újratelepítés
 
 ```bash
-docker exec -it glpi bash /opt/glpi-fresh-install.sh
+# GLPI 10
+docker exec -it glpi10 bash /opt/glpi-fresh-install.sh
+
+# GLPI 11
+docker exec -it glpi11 bash /opt/glpi-fresh-install.sh
 ```

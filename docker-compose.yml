@@ -1,29 +1,31 @@
 services:
-  glpi:
+
+  # --- GLPI 10 ---
+  glpi10:
     build:
       context: ./glpi10-php8
-    container_name: glpi
+    container_name: glpi10
     restart: unless-stopped
     ports:
       - "80:80"
     environment:
-      MARIADB_HOST: mariadb-glpi
+      MARIADB_HOST: mariadb-glpi10
       MARIADB_PORT: 3306
       MARIADB_DATABASE: glpi
       MARIADB_USER: glpi-user
       MARIADB_PASSWORD: glpi-pass
       TIMEZONE: Europe/Budapest
     volumes:
-      - glpi-data:/var/www/html
+      - glpi10-data:/var/www/html
     depends_on:
-      mariadb-glpi:
+      mariadb-glpi10:
         condition: service_healthy
     networks:
-      - glpi-net
+      - glpi10-net
 
-  mariadb-glpi:
+  mariadb-glpi10:
     image: mariadb:10.11
-    container_name: mariadb-glpi
+    container_name: mariadb-glpi10
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root-pass
@@ -31,19 +33,65 @@ services:
       MYSQL_USER: glpi-user
       MYSQL_PASSWORD: glpi-pass
     volumes:
-      - mariadb-data:/var/lib/mysql
+      - mariadb10-data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - glpi-net
+      - glpi10-net
+
+  # --- GLPI 11 ---
+  glpi11:
+    build:
+      context: ./glpi11-php8
+    container_name: glpi11
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      MARIADB_HOST: mariadb-glpi11
+      MARIADB_PORT: 3306
+      MARIADB_DATABASE: glpi
+      MARIADB_USER: glpi-user
+      MARIADB_PASSWORD: glpi-pass
+      TIMEZONE: Europe/Budapest
+    volumes:
+      - glpi11-data:/var/www/html
+    depends_on:
+      mariadb-glpi11:
+        condition: service_healthy
+    networks:
+      - glpi11-net
+
+  mariadb-glpi11:
+    image: mariadb:10.11
+    container_name: mariadb-glpi11
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root-pass
+      MYSQL_DATABASE: glpi
+      MYSQL_USER: glpi-user
+      MYSQL_PASSWORD: glpi-pass
+    volumes:
+      - mariadb11-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - glpi11-net
 
 volumes:
-  glpi-data:
-  mariadb-data:
+  glpi10-data:
+  mariadb10-data:
+  glpi11-data:
+  mariadb11-data:
 
 networks:
-  glpi-net:
+  glpi10-net:
+    driver: bridge
+  glpi11-net:
     driver: bridge
