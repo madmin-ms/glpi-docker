@@ -14,23 +14,36 @@ Dockerizált [GLPI](https://glpi-project.org/) IT eszközkezelő rendszer, Ubunt
 
 ## Gyors indítás
 
-Mindkét verzió egyszerre:
+### Mindkét verzió egyszerre (`docker-compose.yml`)
 
 ```bash
 docker compose up -d
-```
-
-Csak egy verzió:
-
-```bash
-docker compose up -d glpi10 mariadb-glpi10
-docker compose up -d glpi11 mariadb-glpi11
 ```
 
 | Felület | URL |
 |---------|-----|
 | GLPI 10 | [http://localhost](http://localhost) |
 | GLPI 11 | [http://localhost:8080](http://localhost:8080) |
+
+### Csak GLPI 10 (`docker-compose.glpi10.yml`)
+
+```bash
+docker compose -f docker-compose.glpi10.yml up -d
+```
+
+| Felület | URL |
+|---------|-----|
+| GLPI 10 | [http://localhost](http://localhost) |
+
+### Csak GLPI 11 (`docker-compose.glpi11.yml`)
+
+```bash
+docker compose -f docker-compose.glpi11.yml up -d
+```
+
+| Felület | URL |
+|---------|-----|
+| GLPI 11 | [http://localhost](http://localhost) |
 
 Alapértelmezett bejelentkezési adatok: `glpi` / `glpi`
 

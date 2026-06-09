@@ -1,0 +1,49 @@
+services:
+
+  glpi11:
+    image: madminhu/glpi11:latest
+    container_name: glpi11
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    environment:
+      MARIADB_HOST: mariadb-glpi11
+      MARIADB_PORT: 3306
+      MARIADB_DATABASE: glpi
+      MARIADB_USER: glpi-user
+      MARIADB_PASSWORD: glpi-pass
+      TIMEZONE: Europe/Budapest
+    volumes:
+      - glpi11-data:/var/www/html
+    depends_on:
+      mariadb-glpi11:
+        condition: service_healthy
+    networks:
+      - glpi11-net
+
+  mariadb-glpi11:
+    image: mariadb:10.11
+    container_name: mariadb-glpi11
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root-pass
+      MYSQL_DATABASE: glpi
+      MYSQL_USER: glpi-user
+      MYSQL_PASSWORD: glpi-pass
+    volumes:
+      - mariadb11-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - glpi11-net
+
+volumes:
+  glpi11-data:
+  mariadb11-data:
+
+networks:
+  glpi11-net:
+    driver: bridge
