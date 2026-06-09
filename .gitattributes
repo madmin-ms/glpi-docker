@@ -5,3 +5,4 @@
 Dockerfile  text eol=lf
 *.yml       text eol=lf
 *.htaccess  text eol=lf
+htaccess    text eol=lf
