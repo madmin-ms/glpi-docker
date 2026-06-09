@@ -13,9 +13,11 @@ jobs:
           - context: ./glpi10-php8
             image: madminhu/glpi10
             tags: madminhu/glpi10:latest,madminhu/glpi10:10.0.16
+            readme: ./glpi10-php8/README.md
           - context: ./glpi11-php8
             image: madminhu/glpi11
             tags: madminhu/glpi11:latest
+            readme: ./glpi11-php8/README.md
 
     steps:
       - name: Checkout
@@ -40,3 +42,11 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: ${{ matrix.tags }}
+
+      - name: Update Docker Hub description
+        uses: peter-evans/dockerhub-description@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ matrix.image }}
+          readme-filepath: ${{ matrix.readme }}
