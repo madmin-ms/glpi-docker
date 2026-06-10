@@ -72,9 +72,9 @@ fi
 # Data könyvtár létezik?
 [ -d "$GLPI_DATA_PATH" ] || die "GLPI adat könyvtár nem található: ${GLPI_DATA_PATH}"
 
-# glpi.key megvan?
-if [ ! -f "${GLPI_DATA_PATH}/config/glpi.key" ]; then
-    warn "Nem található glpi.key — az adatbázis titkosított adatai nem lesznek visszafejthetők!"
+# Titkosítási kulcs megvan? (glpicrypt.key újabb, glpi.key régebbi GLPI-ban)
+if [ ! -f "${GLPI_DATA_PATH}/config/glpicrypt.key" ] && [ ! -f "${GLPI_DATA_PATH}/config/glpi.key" ]; then
+    warn "Nem található titkosítási kulcs (glpicrypt.key / glpi.key) — az adatbázis titkosított adatai nem lesznek visszafejthetők!"
     read -rp "Folytatod? (igen/nem): " CONFIRM
     [ "$CONFIRM" = "igen" ] || die "Megszakítva."
 fi
@@ -189,18 +189,19 @@ ok "GLPI 11 fájlok a volume-ban"
 echo ""
 log "=== 5. FÁZIS: Kritikus adatok visszaállítása ==="
 
-log "Titkosítási kulcs visszaállítása (glpi.key)..."
-if [ -f "${BACKUP_DIR}/config/config/glpi.key" ]; then
-    cp "${BACKUP_DIR}/config/config/glpi.key" "${GLPI_DATA_PATH}/config/glpi.key"
-    ok "glpi.key visszaállítva"
-else
-    warn "glpi.key nem található a backupban!"
-fi
-
+log "Titkosítási kulcs(ok) visszaállítása..."
+KEY_FOUND=0
 if [ -f "${BACKUP_DIR}/config/config/glpicrypt.key" ]; then
     cp "${BACKUP_DIR}/config/config/glpicrypt.key" "${GLPI_DATA_PATH}/config/glpicrypt.key"
     ok "glpicrypt.key visszaállítva"
+    KEY_FOUND=1
 fi
+if [ -f "${BACKUP_DIR}/config/config/glpi.key" ]; then
+    cp "${BACKUP_DIR}/config/config/glpi.key" "${GLPI_DATA_PATH}/config/glpi.key"
+    ok "glpi.key visszaállítva"
+    KEY_FOUND=1
+fi
+[ "$KEY_FOUND" -eq 0 ] && warn "Egyik titkosítási kulcs sem található a backupban!"
 
 log "Feltöltött fájlok visszaállítása (files/)..."
 cp -r "${BACKUP_DIR}/files/files/." "${GLPI_DATA_PATH}/files/"
