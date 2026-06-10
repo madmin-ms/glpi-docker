@@ -3,22 +3,11 @@ name: Build and Push Docker Images
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
-  build:
+  build-glpi10:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - context: ./glpi10-php8
-            image: madminhu/glpi10
-            tags: madminhu/glpi10:latest,madminhu/glpi10:10.0.16
-            readme: ./glpi10-php8/README.md
-          - context: ./glpi11-php8
-            image: madminhu/glpi11
-            tags: madminhu/glpi11:latest
-            readme: ./glpi11-php8/README.md
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,15 +27,63 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ${{ matrix.context }}
+          context: ./glpi10-php8
           platforms: linux/arm64
           push: true
-          tags: ${{ matrix.tags }}
+          tags: |
+            madminhu/glpi10:latest
+            madminhu/glpi10:10.0.16
 
       - name: Update Docker Hub description
         uses: peter-evans/dockerhub-description@v3
+        continue-on-error: true
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: ${{ matrix.image }}
-          readme-filepath: ${{ matrix.readme }}
+          repository: madminhu/glpi10
+          readme-filepath: ./glpi10-php8/README.md
+
+  build-glpi11:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get latest GLPI 11 version
+        id: glpi_version
+        run: |
+          VERSION=$(curl -s https://api.github.com/repos/glpi-project/glpi/releases | \
+            jq -r '[.[] | select(.prerelease == false and .draft == false) | select(.tag_name | startswith("11."))] | first | .tag_name')
+          echo "GLPI 11 version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./glpi11-php8
+          platforms: linux/arm64
+          push: true
+          tags: |
+            madminhu/glpi11:latest
+            madminhu/glpi11:${{ steps.glpi_version.outputs.version }}
+
+      - name: Update Docker Hub description
+        uses: peter-evans/dockerhub-description@v3
+        continue-on-error: true
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: madminhu/glpi11
+          readme-filepath: ./glpi11-php8/README.md
