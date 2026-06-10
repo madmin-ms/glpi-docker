@@ -27,12 +27,11 @@ fi
 source "$ENV_FILE"
 
 # Kötelező változók ellenőrzése
-: "${MYSQL_HOST:?Hiányzó: MYSQL_HOST}"
-: "${MYSQL_PORT:?Hiányzó: MYSQL_PORT}"
-: "${MYSQL_DATABASE:?Hiányzó: MYSQL_DATABASE}"
-: "${MYSQL_USER:?Hiányzó: MYSQL_USER}"
-: "${MYSQL_PASSWORD:?Hiányzó: MYSQL_PASSWORD}"
-: "${MYSQL_ROOT_PASSWORD:?Hiányzó: MYSQL_ROOT_PASSWORD}"
+: "${MARIADB_HOST:?Hiányzó: MARIADB_HOST}"
+: "${MARIADB_PORT:?Hiányzó: MARIADB_PORT}"
+: "${MARIADB_DATABASE:?Hiányzó: MARIADB_DATABASE}"
+: "${MARIADB_USER:?Hiányzó: MARIADB_USER}"
+: "${MARIADB_PASSWORD:?Hiányzó: MARIADB_PASSWORD}"
 : "${GLPI_CONTAINER_NAME:?Hiányzó: GLPI_CONTAINER_NAME}"
 : "${GLPI_DATA_PATH:?Hiányzó: GLPI_DATA_PATH}"
 : "${GLPI_BACKUP_PATH:?Hiányzó: GLPI_BACKUP_PATH}"
@@ -52,11 +51,11 @@ echo ""
 
 log "Ellenőrzések..."
 
-# MySQL verzió
+# MySQL verzió (minimum 8.0)
 log "MySQL verzió ellenőrzése..."
-MYSQL_VER=$(docker exec "$MYSQL_HOST" mysql --version 2>/dev/null \
+MYSQL_VER=$(docker exec "$MARIADB_HOST" mysql --version 2>/dev/null \
     | grep -oP '\d+\.\d+\.\d+' | head -1) \
-    || die "Nem érhető el a MySQL konténer: ${MYSQL_HOST}"
+    || die "Nem érhető el a MySQL konténer: ${MARIADB_HOST}"
 
 MYSQL_MAJOR=$(echo "$MYSQL_VER" | cut -d. -f1)
 
@@ -83,8 +82,8 @@ fi
 echo ""
 echo "--- Összefoglalás ---"
 echo "  Konténer:      ${GLPI_CONTAINER_NAME}"
-echo "  MySQL host:    ${MYSQL_HOST}:${MYSQL_PORT}"
-echo "  Adatbázis:     ${MYSQL_DATABASE}"
+echo "  MySQL host:    ${MARIADB_HOST}:${MARIADB_PORT}"
+echo "  Adatbázis:     ${MARIADB_DATABASE}"
 echo "  Adat könyvtár: ${GLPI_DATA_PATH}"
 echo "  Backup helye:  ${BACKUP_DIR}"
 echo ""
@@ -100,13 +99,13 @@ log "=== 1. FÁZIS: Backup ==="
 mkdir -p "$BACKUP_DIR"/{db,files,config}
 
 log "Adatbázis mentése (mysqldump)..."
-docker exec "$MYSQL_HOST" mysqldump \
-    -u "$MYSQL_USER" \
-    -p"$MYSQL_PASSWORD" \
+docker exec "$MARIADB_HOST" mysqldump \
+    -u "$MARIADB_USER" \
+    -p"$MARIADB_PASSWORD" \
     --single-transaction \
     --routines \
     --triggers \
-    "$MYSQL_DATABASE" \
+    "$MARIADB_DATABASE" \
     > "${BACKUP_DIR}/db/glpi_${TIMESTAMP}.sql"
 ok "DB backup: ${BACKUP_DIR}/db/glpi_${TIMESTAMP}.sql"
 
@@ -168,11 +167,11 @@ docker run -d \
     -v "${GLPI_DATA_PATH}:/var/www/html" \
     -v "${GLPI_LOG_PATH}:/var/log/apache2" \
     -e TZ="${TIMEZONE:-Europe/Budapest}" \
-    -e MARIADB_HOST="$MYSQL_HOST" \
-    -e MARIADB_PORT="$MYSQL_PORT" \
-    -e MARIADB_USER="$MYSQL_USER" \
-    -e MARIADB_PASSWORD="$MYSQL_PASSWORD" \
-    -e MARIADB_DATABASE="$MYSQL_DATABASE" \
+    -e MARIADB_HOST="$MARIADB_HOST" \
+    -e MARIADB_PORT="$MARIADB_PORT" \
+    -e MARIADB_USER="$MARIADB_USER" \
+    -e MARIADB_PASSWORD="$MARIADB_PASSWORD" \
+    -e MARIADB_DATABASE="$MARIADB_DATABASE" \
     --network glpi_network \
     madminhu/glpi11-mysql:latest
 
