@@ -29,6 +29,7 @@ RUN apt install --yes --no-install-recommends \
     php-zip \
     php-bz2 \
     php-yaml \
+    php-bcmath \
     wget \
     ca-certificates \
     jq \
