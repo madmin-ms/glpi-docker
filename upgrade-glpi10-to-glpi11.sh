@@ -73,6 +73,15 @@ fi
 # Data könyvtár létezik?
 [ -d "$GLPI_DATA_PATH" ] || die "GLPI adat könyvtár nem található: ${GLPI_DATA_PATH}"
 
+# Docker network létezik?
+GLPI_NETWORK="${GLPI_NETWORK:-glpi_network}"
+if ! docker network inspect "$GLPI_NETWORK" >/dev/null 2>&1; then
+    warn "A megadott network (${GLPI_NETWORK}) nem létezik!"
+    echo "Elérhető networkök:"
+    docker network ls --format '  {{.Name}}'
+    die "Állítsd be a GLPI_NETWORK változót a .env fájlban a megfelelő network nevére."
+fi
+
 # Titkosítási kulcs megvan? (glpicrypt.key újabb, glpi.key régebbi GLPI-ban)
 if [ ! -f "${GLPI_DATA_PATH}/config/glpicrypt.key" ] && [ ! -f "${GLPI_DATA_PATH}/config/glpi.key" ]; then
     warn "Nem található titkosítási kulcs (glpicrypt.key / glpi.key) — az adatbázis titkosított adatai nem lesznek visszafejthetők!"
@@ -103,6 +112,8 @@ log "Adatbázis mentése..."
 docker exec "$MARIADB_HOST" mysqldump \
     -u "$MARIADB_USER" \
     -p"$MARIADB_PASSWORD" \
+    --single-transaction \
+    --no-tablespaces \
     "$MARIADB_DATABASE" \
     > "${BACKUP_DIR}/db/glpi_${TIMESTAMP}.sql"
 ok "DB backup: ${BACKUP_DIR}/db/glpi_${TIMESTAMP}.sql"
@@ -170,8 +181,14 @@ docker run -d \
     -e MARIADB_USER="$MARIADB_USER" \
     -e MARIADB_PASSWORD="$MARIADB_PASSWORD" \
     -e MARIADB_DATABASE="$MARIADB_DATABASE" \
-    --network glpi_network \
+    --network "$GLPI_NETWORK" \
     madminhu/glpi11:latest
+
+# Másodlagos network csatlakoztatása (ha be van állítva)
+if [ -n "${WP_NETWORK:-}" ] && docker network inspect "$WP_NETWORK" >/dev/null 2>&1; then
+    docker network connect "$WP_NETWORK" "$GLPI_CONTAINER_NAME" || warn "WP network csatlakoztatás sikertelen"
+    ok "Csatlakoztatva: ${WP_NETWORK}"
+fi
 
 log "Várakozás a GLPI 11 fájlok másolására (MountCheck)..."
 sleep 8
