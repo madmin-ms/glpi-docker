@@ -99,3 +99,20 @@ docker exec -it glpi10 bash /opt/glpi-fresh-install.sh
 # GLPI 11
 docker exec -it glpi11 bash /opt/glpi-fresh-install.sh
 ```
+
+## Frissítés GLPI 10 → GLPI 11
+
+Részletes útmutató: [UPGRADE.md](UPGRADE.md)
+
+### Gyors indítás
+
+```bash
+# 1. Környezeti változók beállítása
+cp .env.example .env
+# Szerkeszd a .env fájlt (jelszavak, útvonalak)
+
+# 2. Frissítés futtatása
+sudo bash upgrade-glpi10-to-glpi11.sh
+```
+
+> **Megjegyzés:** A `.env` fájlt soha ne commitold — tartalmazza az adatbázis jelszót és egyéb érzékeny adatokat.

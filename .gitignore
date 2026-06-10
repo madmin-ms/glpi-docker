@@ -1,0 +1,12 @@
+# Érzékeny adatok - soha ne commitold!
+.env
+*.env.local
+
+# Backup fájlok
+*.sql
+*.sql.gz
+*.tar.gz
+
+# OS
+.DS_Store
+Thumbs.db
