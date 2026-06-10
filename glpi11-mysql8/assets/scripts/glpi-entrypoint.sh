@@ -9,7 +9,7 @@ MountCheck() {
 }
 
 ConfigDataBase() {
-
+  mkdir -p /var/www/html/config
   {
     echo "<?php"
     echo "class DB extends DBmysql {"
@@ -21,24 +21,28 @@ ConfigDataBase() {
     echo "}"
     echo
   } >/var/www/html/config/config_db.php
-
 }
 
 FreshInstallCheck() {
-  echo "Checking GLPI DB availability"
-  until ! curl localhost|grep "A link to the SQL server could not be established"
-  do
-    echo "GLPI DB isn't ready."
-    sleep 1
+  echo "Waiting for Apache to respond..."
+  until curl -s -o /dev/null -w "%{http_code}" localhost | grep -qE "^[1-9][0-9]{2}$"; do
+    echo "Apache not ready yet."
+    sleep 2
   done
-  echo "GLPI DB is up! Resuming entrypoint... "
-  if curl localhost| grep "Error accessing config table"
-  then
+
+  echo "Checking GLPI DB availability"
+  until ! curl -s localhost | grep -q "A link to the SQL server could not be established"; do
+    echo "GLPI DB isn't ready."
+    sleep 2
+  done
+  echo "GLPI DB is up! Resuming entrypoint..."
+
+  GLPI_RESPONSE=$(curl -s localhost)
+  if echo "$GLPI_RESPONSE" | grep -q "Error accessing config table"; then
     echo "DB schema not installed. Installing"
     /usr/bin/php /var/www/html/bin/console db:install -n --force
     chown -R www-data:www-data /var/www/html/
-  elif curl localhost|grep "GLPI - Authentication"
-  then
+  elif echo "$GLPI_RESPONSE" | grep -q "GLPI - Authentication"; then
     echo "DB Installed. Resuming starting process"
   fi
 }
