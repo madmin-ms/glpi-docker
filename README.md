@@ -2,10 +2,12 @@
 
 Dockerizált [GLPI](https://glpi-project.org/) IT eszközkezelő rendszer, Ubuntu 24.04 alapon, Apache2 + PHP 8.3 stackkel.
 
-| Verzió | Könyvtár | Port |
-|--------|----------|------|
-| GLPI 10.0.16 | `glpi10-php8/` | 80 |
-| GLPI 11 (legújabb stable) | `glpi11-php8/` | 8080 |
+| Verzió | Könyvtár | DB | Port |
+|--------|----------|----|------|
+| GLPI 10.0.16 | `glpi10-php8/` | MariaDB | 80 |
+| GLPI 11 (legújabb stable) | `glpi11-php8/` | MariaDB | 8080 |
+| GLPI 10.0.16 | `glpi10-mysql8/` | MySQL 8.0 | 80 |
+| GLPI 11 (legújabb stable) | `glpi11-mysql8/` | MySQL 8.0 | 8080 |
 
 ## Követelmények
 
@@ -44,6 +46,16 @@ docker compose -f docker-compose.glpi11.yml up -d
 | Felület | URL |
 |---------|-----|
 | GLPI 11 | [http://localhost](http://localhost) |
+
+### MySQL variánsok
+
+```bash
+# GLPI 10 + MySQL 8.0
+docker compose -f docker-compose.glpi10-mysql.yml up -d
+
+# GLPI 11 + MySQL 8.0
+docker compose -f docker-compose.glpi11-mysql.yml up -d
+```
 
 Alapértelmezett bejelentkezési adatok: `glpi` / `glpi`
 
@@ -111,8 +123,11 @@ Részletes útmutató: [UPGRADE.md](UPGRADE.md)
 cp .env.example .env
 # Szerkeszd a .env fájlt (jelszavak, útvonalak)
 
-# 2. Frissítés futtatása
+# 2. Frissítés futtatása (MariaDB)
 sudo bash upgrade-glpi10-to-glpi11.sh
+
+# vagy MySQL esetén
+sudo bash upgrade-glpi10-to-glpi11-mysql.sh
 ```
 
 > **Megjegyzés:** A `.env` fájlt soha ne commitold — tartalmazza az adatbázis jelszót és egyéb érzékeny adatokat.
